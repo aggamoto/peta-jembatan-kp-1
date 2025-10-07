@@ -17,10 +17,14 @@
   <div id="map"></div>
 
   <script>
-    // Inisialisasi peta
-    var map = L.map('map').setView([-7.826, 110.156], 12); // Ubah ke lokasi awal Pengasih/Kulon Progo
+    // Ambil parameter dari URL (?target=NamaJembatan)
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetName = urlParams.get('target'); // Nama jembatan yang dicari
 
-    // === Basemap Layers ===
+    // Inisialisasi peta
+    var map = L.map('map').setView([-7.826, 110.156], 12);
+
+    // Basemap
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -35,15 +39,15 @@
       attribution: 'Map data © OpenStreetMap contributors, SRTM | Style © OpenTopoMap'
     });
 
-    // === Load file GeoJSON ===
-    fetch('https://raw.githubusercontent.com/aggamoto/peta-jembatan-kp-1/refs/heads/main/jbt-kp.json')
+    // Load file GeoJSON dari GitHub RAW
+    fetch('https://raw.githubusercontent.com/aggamoto/peta-jembatan-kp-1/main/jbt-kp.geojson')
       .then(res => res.json())
       .then(data => {
         var geoLayer = L.geoJSON(data, {
           onEachFeature: function (feature, layer) {
-            // Popup otomatis dari atribut GeoJSON
-            var popupContent = "<b>" + (feature.properties.name || "Jembatan") + "</b><br>" +
-                               (feature.properties.description || "");
+            var popupContent = "<b>" +
+              (feature.properties.name || feature.properties.Nama_Jembatan || "Jembatan") +
+              "</b>";
             layer.bindPopup(popupContent);
           },
           pointToLayer: function(feature, latlng) {
@@ -55,27 +59,38 @@
                 popupAnchor: [0, -20]
               })
             });
-          },
-          style: {
-            color: "#007849",
-            weight: 2
           }
         }).addTo(map);
 
-        // Fokus ke area data
-        map.fitBounds(geoLayer.getBounds());
+        // Kalau ada parameter target, fokus ke jembatan tersebut
+        if (targetName) {
+          var found = false;
+          geoLayer.eachLayer(function(layer) {
+            let nama = layer.feature.properties.name || layer.feature.properties.Nama_Jembatan;
+            if (nama && nama.toLowerCase() === targetName.toLowerCase()) {
+              map.setView(layer.getLatLng(), 17);
+              layer.openPopup();
+              found = true;
+            }
+          });
+          if (!found) {
+            console.warn("Nama jembatan tidak ditemukan:", targetName);
+            map.fitBounds(geoLayer.getBounds());
+          }
+        } else {
+          // Kalau tidak ada target di URL, tampilkan semua
+          map.fitBounds(geoLayer.getBounds());
+        }
       })
-      .catch(err => console.error("Gagal memuat jbt-kp.geojson:", err));
+      .catch(err => console.error("Gagal load GeoJSON:", err));
 
-    // === Layer Control ===
+    // Layer Control
     var baseMaps = {
       "OpenStreetMap": osm,
       "Satelit": satelit,
       "Terrain": terrain
     };
-
     L.control.layers(baseMaps, null, { collapsed: false }).addTo(map);
   </script>
 </body>
 </html>
-
