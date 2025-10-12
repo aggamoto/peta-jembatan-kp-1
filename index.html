@@ -8,9 +8,9 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- ✅ Fullscreen Plugin (versi terbaru & stabil) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.4.0/leaflet.fullscreen.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.4.0/Leaflet.fullscreen.min.js"></script>
+  <!-- Plugin Fullscreen -->
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css" />
+  <script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js"></script>
 
   <style>
     html, body { height: 100%; margin: 0; }
@@ -29,7 +29,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const targetName = urlParams.get('target');
 
-    // Inisialisasi peta + tombol fullscreen di kanan bawah
+    // Inisialisasi peta dengan kontrol fullscreen
     var map = L.map('map', {
       fullscreenControl: true,
       fullscreenControlOptions: {
@@ -52,7 +52,7 @@
       attribution: 'Map data © OpenStreetMap contributors, SRTM | Style © OpenTopoMap'
     });
 
-    // Load data jembatan dari GeoJSON GitHub
+    // Load GeoJSON
     fetch('https://raw.githubusercontent.com/aggamoto/peta-jembatan-kp-1/main/jbt-kp.geojson')
       .then(res => res.json())
       .then(data => {
@@ -75,7 +75,7 @@
           }
         }).addTo(map);
 
-        // Fokus ke jembatan tertentu jika pakai parameter ?target=
+        // Fokus ke jembatan tertentu jika parameter ?target ada
         if (targetName) {
           var found = false;
           geoLayer.eachLayer(function(layer) {
@@ -93,19 +93,16 @@
         } else {
           map.fitBounds(geoLayer.getBounds());
         }
-
-        // Layer Control (ON/OFF)
-        var baseMaps = {
-          "OpenStreetMap": osm,
-          "Satelit": satelit,
-          "Terrain": terrain
-        };
-        var overlayMaps = {
-          "Jembatan": geoLayer
-        };
-        L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
       })
       .catch(err => console.error("Gagal load GeoJSON:", err));
+
+    // Layer Control
+    var baseMaps = {
+      "OpenStreetMap": osm,
+      "Satelit": satelit,
+      "Terrain": terrain
+    };
+    L.control.layers(baseMaps, null, { collapsed: false }).addTo(map);
   </script>
 </body>
 </html>
