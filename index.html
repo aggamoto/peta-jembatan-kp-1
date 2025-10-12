@@ -8,36 +8,23 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Plugin Fullscreen -->
-  <link rel="stylesheet" href="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css" />
-  <script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js"></script>
-
   <style>
     html, body { height: 100%; margin: 0; }
     #map { width: 100%; height: 100vh; }
-    #map:fullscreen, #map:-webkit-full-screen, #map:-moz-full-screen {
-      width: 100vw;
-      height: 100vh;
-    }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
   <script>
-    // Ambil parameter dari URL (?target=NamaJembatan)
+    // Ambil parameter dari URL (contoh: ?target=Jembatan%20Kalibawang)
     const urlParams = new URLSearchParams(window.location.search);
-    const targetName = urlParams.get('target');
+    const targetName = urlParams.get('target'); // Nama jembatan yang dicari
 
-    // Inisialisasi peta dengan kontrol fullscreen
-    var map = L.map('map', {
-      fullscreenControl: true,
-      fullscreenControlOptions: {
-        position: 'bottomright'
-      }
-    }).setView([-7.826, 110.156], 12);
+    // Inisialisasi peta
+    var map = L.map('map').setView([-7.826, 110.156], 12);
 
-    // Basemap
+    // === Basemap Layers ===
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
@@ -52,14 +39,14 @@
       attribution: 'Map data © OpenStreetMap contributors, SRTM | Style © OpenTopoMap'
     });
 
-    // Load GeoJSON
-    fetch('https://raw.githubusercontent.com/aggamoto/peta-jembatan-kp-1/main/jbt-kp.geojson')
+    // === Load file GeoJSON dari GitHub RAW ===
+    fetch('https://raw.githubusercontent.com/aggamoto/peta-jembatan-kp-1/refs/heads/main/jbt-kp.json')
       .then(res => res.json())
       .then(data => {
         var geoLayer = L.geoJSON(data, {
           onEachFeature: function (feature, layer) {
-            var popupContent = "<b>" +
-              (feature.properties.name || feature.properties.Nama_Jembatan || "Jembatan") +
+            var popupContent = "<b>" + 
+              (feature.properties.name || feature.properties.Nama_Jembatan || "Jembatan") + 
               "</b>";
             layer.bindPopup(popupContent);
           },
@@ -75,7 +62,7 @@
           }
         }).addTo(map);
 
-        // Fokus ke jembatan tertentu jika parameter ?target ada
+        // Kalau ada parameter target, fokus ke jembatan tersebut
         if (targetName) {
           var found = false;
           geoLayer.eachLayer(function(layer) {
@@ -91,12 +78,13 @@
             map.fitBounds(geoLayer.getBounds());
           }
         } else {
+          // Kalau gak ada target di URL, tampilkan semua
           map.fitBounds(geoLayer.getBounds());
         }
       })
       .catch(err => console.error("Gagal load GeoJSON:", err));
 
-    // Layer Control
+    // === Layer Control ===
     var baseMaps = {
       "OpenStreetMap": osm,
       "Satelit": satelit,
