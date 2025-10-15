@@ -40,7 +40,8 @@
     });
 
     // === Load file GeoJSON dari GitHub RAW ===
-    fetch('https://raw.githubusercontent.com/aggamoto/peta-jembatan-kp-1/refs/heads/main/jbt-kp.geojson')
+    fetch('https://raw.githubusercontent.com/aggamoto/peta-jembatan-kp-1/main/jbt-kp.geojson')
+
       .then(res => res.json())
       .then(data => {
         var geoLayer = L.geoJSON(data, {
@@ -94,4 +95,5 @@
   </script>
 </body>
 </html>
+
 
